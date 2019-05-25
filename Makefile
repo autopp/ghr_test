@@ -15,12 +15,13 @@ VERSION=$(patsubst "%",%,$(lastword $(shell grep 'const Version' main.go)))
 ARTIFACT_DIR=$(CURDIR)/artifacts
 TARGET_DIR=$(ARTIFACT_DIR)/$(PRODUCT)_$(GOOS)_$(GOARCH)
 EXEFILE=$(TARGET_DIR)/$(PRODUCT)$(SUFFIX)
+ARTIFACT=$(ARTIFACT_DIR)/$(PRODUCT)_$(GOOS)_$(GOARCH).zip
 
 TARGETS=windows-amd64 windows-386 linux-amd64 linux-arm linux-arm64 linux-386 darwin-amd64 darwin-386
 BUILD_TARGETS=$(addprefix build-,$(TARGETS))
 RELEASE_TARGETS=$(addprefix release-,$(TARGETS))
 
-.PHONY: build all clean
+.PHONY: build all artifact clean
 
 build: $(EXEFILE)
 
@@ -34,6 +35,11 @@ all: $(BUILD_TARGETS)
 
 $(ARTIFACT_DIR):
 	mkdir -p $@
+
+artifact: $(ARTIFACT)
+
+$(ARTIFACT): $(EXEFILE) $(ARTIFACT_DIR)
+	cd $(ARTIFACT_DIR) && zip $@ $(PRODUCT)_$(GOOS)_$(GOARCH)/*
 
 clean:
 	rm -fR $(ARTIFACT_DIR)
