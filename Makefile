@@ -19,9 +19,9 @@ ARTIFACT=$(ARTIFACT_DIR)/$(PRODUCT)_$(GOOS)_$(GOARCH).zip
 
 TARGETS=windows-amd64 windows-386 linux-amd64 linux-arm linux-arm64 linux-386 darwin-amd64 darwin-386
 BUILD_TARGETS=$(addprefix build-,$(TARGETS))
-RELEASE_TARGETS=$(addprefix release-,$(TARGETS))
+ARTIFACT_TARGETS=$(addprefix artifact-,$(TARGETS))
 
-.PHONY: build all artifact clean
+.PHONY: build all artifact artifacts clean
 
 build: $(EXEFILE)
 
@@ -40,6 +40,11 @@ artifact: $(ARTIFACT)
 
 $(ARTIFACT): $(EXEFILE) $(ARTIFACT_DIR)
 	cd $(ARTIFACT_DIR) && zip $@ $(PRODUCT)_$(GOOS)_$(GOARCH)/*
+
+artifact-%:
+	$(MAKE) artifact GOOS=$(word 2,$(subst -, ,$@)) GOARCH=$(word 3,$(subst -, ,$@))
+
+artifacts: $(ARTIFACT_TARGETS)
 
 clean:
 	rm -fR $(ARTIFACT_DIR)
