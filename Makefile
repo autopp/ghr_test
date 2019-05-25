@@ -12,8 +12,9 @@ endif
 PRODUCT=ghr_test
 VERSION=$(patsubst "%",%,$(lastword $(shell grep 'const Version' main.go)))
 
-ARTIFACT_DIR=$(CURDIR)/artifacts
-TARGET_DIR=$(ARTIFACT_DIR)/$(PRODUCT)_$(GOOS)_$(GOARCH)
+RELEASE_DIR=$(CURDIR)/releases
+ARTIFACT_DIR=$(RELEASE_DIR)/artifacts
+TARGET_DIR=$(RELEASE_DIR)/$(PRODUCT)_$(GOOS)_$(GOARCH)
 EXEFILE=$(TARGET_DIR)/$(PRODUCT)$(SUFFIX)
 ARTIFACT=$(ARTIFACT_DIR)/$(PRODUCT)_$(GOOS)_$(GOARCH).zip
 
@@ -21,7 +22,7 @@ TARGETS=windows-amd64 windows-386 linux-amd64 linux-arm linux-arm64 linux-386 da
 BUILD_TARGETS=$(addprefix build-,$(TARGETS))
 ARTIFACT_TARGETS=$(addprefix artifact-,$(TARGETS))
 
-.PHONY: build all artifact artifacts clean
+.PHONY: build all artifact artifacts release clean
 
 build: $(EXEFILE)
 
@@ -39,12 +40,15 @@ $(ARTIFACT_DIR):
 artifact: $(ARTIFACT)
 
 $(ARTIFACT): $(EXEFILE) $(ARTIFACT_DIR)
-	cd $(ARTIFACT_DIR) && zip $@ $(PRODUCT)_$(GOOS)_$(GOARCH)/*
+	cd $(RELEASE_DIR) && zip $@ $(PRODUCT)_$(GOOS)_$(GOARCH)/*
 
 artifact-%:
 	$(MAKE) artifact GOOS=$(word 2,$(subst -, ,$@)) GOARCH=$(word 3,$(subst -, ,$@))
 
 artifacts: $(ARTIFACT_TARGETS)
 
+release: artifacts
+	ghr -b "v$(VERSION)" "v$(VERSION)" $(ARTIFACT_DIR)
+
 clean:
-	rm -fR $(ARTIFACT_DIR)
+	rm -fR $(RELEASE_DIR)
